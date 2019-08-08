@@ -1,0 +1,61 @@
+#!/bin/bash
+
+source .env
+
+TOOL_COMMAND=$1
+TOOL_DIR=$(pwd)
+
+function print_help {
+  printf "\n\033[0;30;42mFacebook bruteforcer by captaincode0\033[0m\n"
+
+  printf "\n\033[0;30;42mUsage: ${0} --command\033[0m\n"
+
+  echo "Commands:"
+  echo " -h | --help    shows this message"
+  echo " -b | --build   builds docker environment"
+  echo " -x | --exec    executes tool"
+}
+
+function build {
+  printf "\n\033[0;30;42m[+] building image\033[0m\n"
+
+  # BUILD IMAGE
+  docker build --no-cache \
+  --build-arg APP_SRC="${APP_SRC}" \
+  -t "${DOCKER_IMAGE_NAME}" .
+
+  # RUN CONTAINER
+  docker run -d -v ${TOOL_DIR}:${APP_SRC} \
+  --name ${DOCKER_CONTAINER_NAME} \
+  ${DOCKER_IMAGE_NAME}
+}
+
+function exec_tool {
+  printf "\n\033[0;30;42m[+] executing tool inside docker container\033[0m\n"
+
+  docker start ${DOCKER_CONTAINER_NAME}
+
+  # EXEC TOOL
+  docker exec -t ${DOCKER_CONTAINER_NAME} bruteforcer
+}
+
+case $TOOL_COMMAND in
+  "-h"|"--help")
+    print_help
+  ;;
+  "-b"|"--build")
+    build
+  ;;
+  "-x"|"--exec")
+    exec_tool
+  ;;
+  *)
+    printf "\n\033[0;97;41mError: Command [${TOOL_COMMAND}] not found please read help section\033[0m\n"
+
+    print_help
+
+    exit -1
+  ;;
+esac
+
+exit 0
